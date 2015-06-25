@@ -1,123 +1,34 @@
-#include <iostream>
+#include "bmp_handler.h"
 
 #define DEBUG 1
 
-float linearConvert(const unsigned int x, float A, float B, float C, float D);
-float downconvert(const unsigned int start);
-float upconvert(const unsigned int start);
+std::string APPPATH;
 
-int main(void)
+int main(int argc, char *argv[])
 {
-	unsigned int start = 0x85;
-	unsigned int end;
+	//This is a hack to simulate with mock arguments
+	argc = 3;
+	argv[1] = "D:\\Projects\\petulant-archer\\test_files\\compass_color.bmp";
+	argv[2] = "2";
+	//End of HACK
 
-	end = upconvert(start);
+	//Get this party started
+	_bmpImage image;
+	
+	//Where is the app running from?
+	APPPATH = argv[0];
 
-	start = downconvert(end);
+	//Where is the source file?
+	image.setSourceFile(argv[1]);
+
+	//How should the resultant files store the values?
+	image.dimensions = *argv[2] - '0';
+
+	//Open and fill the buffer with the image
+	image.openSourceFile();
+
+	//Create header files in each of the possible sizes
+	image.createHeaderFiles();
 
 	system("pause");
-}
-
-float downconvert(const unsigned int start)
-{
-	// Need to split the three colors and upconvert them individually
-	// since the three colors each have distinct ranges
-	float R, G, B;
-	unsigned int newValue;
-
-	// Assuming the source image's color config is RRRGGGBB
-	// Assuming the desired color config is RRRRRGGGGGGBBBBB
-
-#if(DEBUG == 1)
-	printf("Starting Value: %i\n\n", start);
-#endif
-	//Shift apart the individual colors
-	R = (start & 0xF800)>>11;
-	G = (start & 0x07E0)>>5;
-	B = (start & 0x001F);
-	
-#if DEBUG == 1
-	printf("Initial RGB Values:\n\tR = %f\n\tG = %f\n\tB = %f\n", R, G, B);
-#endif
-	//The ranges for R are [0-31] and [0-7]
-	R = linearConvert(R, 0, 31, 0, 7);
-	//The ranges for G are [0-63] and [0-7]
-	G = linearConvert(G, 0, 63, 0, 7);
-	//The ranges for B are [0-31] and [0-3]
-	B = linearConvert(B, 0, 31, 0, 3);
-
-#if DEBUG == 1
-	printf("After Linear Conversion:\n\tR = %f\n\tG = %f\n\tB = %f\n", R, G, B);
-#endif
-	//Shift them back into place
-	R = (int)R<<5;
-	G = (int)G<<2;
-	B = (int)B;
-
-#if DEBUG == 1
-	printf("Shifted back up:\n\tR = %f\n\tG = %f\n\tB = %f\n", R, G, B);
-#endif
-	newValue = R + G + B;
-
-//#if DEBUG == 1
-	printf("\nDownscaled: %i\n", newValue);
-//#endif
- 	return newValue;
-}
-
-float upconvert(const unsigned int start)
-{
-	// Need to split the three colors and upconvert them individually
-	// since the three colors each have distinct ranges
-	float R, G, B;
-	unsigned int newValue;
-
-	// Assuming the source image's color config is RRRGGGBB
-	// Assuming the desired color config is RRRRRGGGGGGBBBBB
-
-#if(DEBUG == 1)
-	printf("Starting Value: %i\n\n", start);
-#endif
-	//Shift apart the individual colors
-	R = (start & 0xE0)>>5;
-	G = (start & 0x1C)>>2;
-	B = (start & 0x03);
-	
-#if DEBUG == 1
-	printf("Initial RGB Values:\n\tR = %f\n\tG = %f\n\tB = %f\n", R, G, B);
-#endif
-	//The ranges for R are [0-7] and [0-31]
-	R = linearConvert(R, 0, 7, 0, 31);
-	//The ranges for G are [0-7] and [0-63]
-	G = linearConvert(G, 0, 7, 0, 63);
-	//The ranges for B are [0-3] and [0-31]
-	B = linearConvert(B, 0, 3, 0, 31);
-
-#if DEBUG == 1
-	printf("After Linear Conversion:\n\tR = %f\n\tG = %f\n\tB = %f\n", R, G, B);
-#endif
-	//Shift them back into place
-	R = (int)R<<11;
-	G = (int)G<<5;
-	B = (int)B;
-
-#if DEBUG == 1
-	printf("Shifted back up:\n\tR = %f\n\tG = %f\n\tB = %f\n", R, G, B);
-#endif
-	newValue = R + G + B;
-
-//#if DEBUG == 1
-	printf("\nUpscaled: %i\n", newValue);
-//#endif
- 	return newValue;
-}
-
-float linearConvert(const unsigned int x, float A, float B, float C, float D)
-{
-	float returnValue;
-	
-	// This equation came from a stack exchange post
-	//http://math.stackexchange.com/questions/43698/range-scaling-problem
-	returnValue = C + (D-C)*((x-A)/(B-A));
-	return returnValue;
 }
