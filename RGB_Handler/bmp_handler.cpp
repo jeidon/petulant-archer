@@ -3,14 +3,20 @@
 #endif
 #include "bmp_handler.h"
 
-int _bmpImage::createHeaderFile(int bpp)
+int _bmpImage::createHeaderFile(int bpp, int dimensions)
 {
 	int arrayWidth;
 	FILE *fDest;
-	std::string destfile;
+	std::string destfile = workingDir;
 	
-	destfile = imageDir;
-	destfile += imageString;
+	if(dimensions == 1)
+	{
+		destfile += "_1dim";
+	}
+	else if(dimensions == 2)
+	{
+		destfile += "_2dim";
+	}
 
 	if(bpp == bit32)
 	{
@@ -44,7 +50,7 @@ int _bmpImage::createHeaderFile(int bpp)
 		exit(0);
 	}
 
-	fprintf(fDest, "PROGMEM const unsigned char %s_%ibit", imageString.c_str(), bpp);
+	fprintf(fDest, "PROGMEM const unsigned char %c_%ibit", fname, bpp);
 	
 	if(dimensions == 2)
 	{
@@ -142,20 +148,12 @@ void _bmpImage::downConvert8(const RGBTRIPLE *pixel, BYTE *newValue)
 	//The ranges for B are [0-255] and [0-3]
 	newPixel.rgbtBlue = linearConvert(pixel->rgbtBlue, 0, 255, 0, 3);
 
-#if DEBUG == 1
-	printf("After Linear Conversion:\n\tR = %f\n\tG = %f\n\tB = %f\n", R, G, B);
-#endif
-
 	//Shift them back into place
 	newPixel.rgbtRed   = (newPixel.rgbtRed   << 5) & 0xE0;
 	newPixel.rgbtGreen = (newPixel.rgbtGreen << 2) & 0x1C;
 	newPixel.rgbtBlue  = (newPixel.rgbtBlue  << 0) & 0x03;
 
 	*newValue = newPixel.rgbtRed + newPixel.rgbtGreen + newPixel.rgbtBlue;
-
-#if DEBUG == 1
-	printf("\nDownscaled: %i\n", newValue);
-#endif
 }
 void _bmpImage::downConvert16(const RGBTRIPLE *pixel, BYTE *newValue1, BYTE *newValue2)
 {
@@ -167,10 +165,6 @@ void _bmpImage::downConvert16(const RGBTRIPLE *pixel, BYTE *newValue1, BYTE *new
 	newPixel.rgbtGreen = linearConvert(pixel->rgbtGreen, 0, 255, 0, 63);
 	//The ranges for B are [0-3] and [0-31]
 	newPixel.rgbtBlue = linearConvert(pixel->rgbtBlue, 0, 255, 0, 31);
-
-#if DEBUG == 1
-	printf("After Linear Conversion:\n\tR = %f\n\tG = %f\n\tB = %f\n", pixel->rgbtRed, pixel->rgbtGreen, pixel->rgbtBlue);
-#endif
 
 	*newValue1 = ((newPixel.rgbtRed   << 3) & 0xF8) | (newPixel.rgbtGreen & 0x07);
 	*newValue2 = ((newPixel.rgbtGreen << 2) & 0xE0) | (newPixel.rgbtBlue  & 0x1F);
@@ -184,10 +178,6 @@ void _bmpImage::downConvert18(const RGBTRIPLE *pixel, RGBTRIPLE *newPixel)
 	newPixel->rgbtGreen = linearConvert(pixel->rgbtGreen, 0, 255, 0, 63);
 	//The ranges for B are [0-255] and [0-63]
 	newPixel->rgbtBlue = linearConvert(pixel->rgbtBlue, 0, 255, 0, 63);
-
-#if DEBUG == 1
-	printf("After Linear Conversion:\n\tR = %f\n\tG = %f\n\tB = %f\n", pixel->rgbtRed, pixel->rgbtGreen, pixel->rgbtBlue);
-#endif
 }
 RGBTRIPLE _bmpImage::getPixel(int x,int y)
 {
@@ -240,20 +230,16 @@ void _bmpImage::openSourceFile()
 }
 void _bmpImage::setPixel(int x,int y, RGBTRIPLE color)
 {
-	// Image define from earlier
+	// Image defined from earlier
 	image[(bih.biHeight-1-y)*bih.biWidth+x] = color;
 }
 void _bmpImage::setSourceFile(char *path)
 {
+	_splitpath_s(path, drive, dir, fname, ext );
 
-	//TODAY this can't be set manually
-	imageString = "compass_color";
-
-	char tempFile[200];
-	strncpy(tempFile, path, 200);
-	PathRemoveFileSpec(tempFile);
-	imageDir = tempFile;
-	imageDir += "\\";
+	workingDir = drive;
+	workingDir += dir;
+	workingDir += fname;
 
 	sourceFile = path;
 }

@@ -1,3 +1,4 @@
 # petulant-archer
-Converts a 32bit source bmp to 8/16/19/24 and 32 bit color variables.
-Will soon accept 24-bit images as well.
+Converts a 32-bit or 24-bit source BMP to 10 different header files. Combinations include 8/16/18/24/32-bit each with a 1 and 2 dimensional array.
+
+Used where a source image needs converted to a header file for inclusion into a program. Semi-specifically for microprocessors with displays attached.

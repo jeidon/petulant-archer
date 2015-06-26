@@ -10,6 +10,14 @@ class _bmpImage
 {
 private:
 	//Private Properties
+	//File components
+	char		drive[_MAX_DRIVE];
+	char		dir[_MAX_DIR];
+	char		fname[_MAX_FNAME];
+	char		ext[_MAX_EXT];
+	std::string	workingDir;
+
+	//Other stuff
 	BYTE alpha;
 	RGBTRIPLE	*image;
 	std::string	sourceFile;
@@ -21,7 +29,7 @@ private:
 public:
 
 	//Public Methods
-	int			createHeaderFile(int bpp);
+	int			createHeaderFile(int bpp, int dimensions);
 	RGBTRIPLE	getPixel(int x, int y);
 	void		initBlank(int x, int y);
 	void		openSourceFile();
@@ -33,9 +41,7 @@ public:
 	BITMAPINFOHEADER	bih;
 
 	//The following are part of the image pathing and filename stuff
-	std::string			imageDir;
-	std::string			imageString;
-	int					dimensions;
+//	std::string			imageString;
 };
 
 /*
