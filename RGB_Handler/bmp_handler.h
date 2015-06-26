@@ -21,7 +21,7 @@ private:
 public:
 
 	//Public Methods
-	int			createHeaderFiles();
+	int			createHeaderFile(int bpp);
 	RGBTRIPLE	getPixel(int x, int y);
 	void		initBlank(int x, int y);
 	void		openSourceFile();

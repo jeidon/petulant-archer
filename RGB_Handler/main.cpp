@@ -28,7 +28,11 @@ int main(int argc, char *argv[])
 	image.openSourceFile();
 
 	//Create header files in each of the possible sizes
-	image.createHeaderFiles();
+	image.createHeaderFile(bit8);
+	image.createHeaderFile(bit16);
+	image.createHeaderFile(bit18);
+	image.createHeaderFile(bit24);
+	image.createHeaderFile(bit32);
 
 	system("pause");
 }

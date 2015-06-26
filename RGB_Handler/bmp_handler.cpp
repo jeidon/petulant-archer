@@ -1,73 +1,56 @@
+#ifdef _WIN32
+#define _CRT_SECURE_NO_DEPRECATE
+#endif
 #include "bmp_handler.h"
 
-int _bmpImage::createHeaderFiles()
+int _bmpImage::createHeaderFile(int bpp)
 {
-	FILE *fDest32, *fDest24, *fDest18, *fDest16, *fDest8;
-	std::string destfile, tempFilename;
+	int arrayWidth;
+	FILE *fDest;
+	std::string destfile;
 	
 	destfile = imageDir;
 	destfile += imageString;
 
-	tempFilename = destfile;
-	tempFilename += "_32bit.h";
-	if((fDest32 = fopen(tempFilename.c_str(), "wb")) == NULL)
+	if(bpp == bit32)
 	{
- 		printf("The file %s cannot be created\n", tempFilename.c_str());
+		destfile += "_32bit.h";
+		arrayWidth = bih.biWidth*4;
+	}
+	else if(bpp == bit24)
+	{
+		destfile += "_24bit.h";
+		arrayWidth = bih.biWidth*3;
+	}
+	else if(bpp == bit18)
+	{
+		destfile += "_18bit.h";
+		arrayWidth = bih.biWidth*3;
+	}
+	else if(bpp == bit16)
+	{
+		destfile += "_16bit.h";
+		arrayWidth = bih.biWidth*2;
+	}
+	else if(bpp == bit8)
+	{
+		destfile += "_8bit.h";
+		arrayWidth = bih.biWidth;
+	}
+	
+	if((fDest = fopen(destfile.c_str(), "wb")) == NULL)
+	{
+ 		printf("The file %s cannot be created\n", destfile.c_str());
 		exit(0);
 	}
 
-	tempFilename = destfile;
-	tempFilename += "_24bit.h";
-	if((fDest24 = fopen(tempFilename.c_str(), "wb")) == NULL)
-	{
- 		printf("The file %s cannot be created\n", tempFilename.c_str());
-		exit(0);
-	}
-
-	tempFilename = destfile;
-	tempFilename += "_18bit.h";
-	if((fDest18 = fopen(tempFilename.c_str(), "wb")) == NULL)
-	{
- 		printf("The file %s cannot be created\n", tempFilename.c_str());
-		exit(0);
-	}
-
-	tempFilename = destfile;
-	tempFilename += "_16bit.h";
-	if((fDest16 = fopen(tempFilename.c_str(), "wb")) == NULL)
-	{
- 		printf("The file %s cannot be created\n", tempFilename.c_str());
-		exit(0);
-	}
-
-	tempFilename = destfile;
-	tempFilename += "_8bit.h";
-	if((fDest8 = fopen(tempFilename.c_str(), "wb")) == NULL)
-	{
- 		printf("The file %s cannot be created\n", tempFilename.c_str());
-		exit(0);
-	}
-
-	//Print the opening that makes this a variable
-	fprintf(fDest32, "PROGMEM const unsigned char %s_32bit", imageString.c_str());
-	fprintf(fDest24, "PROGMEM const unsigned char %s_24bit", imageString.c_str());
-	fprintf(fDest18, "PROGMEM const unsigned char %s_18bit", imageString.c_str());
-	fprintf(fDest16, "PROGMEM const unsigned char %s_16bit", imageString.c_str());
-	fprintf(fDest8, "PROGMEM const unsigned char %s_8bit", imageString.c_str());
-
+	fprintf(fDest, "PROGMEM const unsigned char %s_%ibit", imageString.c_str(), bpp);
+	
 	if(dimensions == 2)
 	{
-		fprintf(fDest32, "[%i][%i]", bih.biHeight, bih.biWidth*4);
-		fprintf(fDest24, "[%i][%i]", bih.biHeight, bih.biWidth*3);
-		fprintf(fDest18, "[%i][%i]", bih.biHeight, bih.biWidth*3);
-		fprintf(fDest16, "[%i][%i]", bih.biHeight, bih.biWidth*2);
-		fprintf(fDest8, "[%i][%i]", bih.biHeight, bih.biWidth);
+		fprintf(fDest, "[%i][%i]", bih.biHeight, arrayWidth);
 	}
-	fprintf(fDest32, " = {\n");
-	fprintf(fDest24, " = {\n");
-	fprintf(fDest18, " = {\n");
-	fprintf(fDest16, " = {\n");
-	fprintf(fDest8, " = {\n");
+	fprintf(fDest, " = {\n");
 
  	long Line = 0;
  	
@@ -83,87 +66,69 @@ int _bmpImage::createHeaderFiles()
 			
 			if( (Line==0 || Line%bih.biWidth == 0) && (dimensions == 2) )
 			{
-				fprintf(fDest32, "{");
-				fprintf(fDest24, "{");
-				fprintf(fDest18, "{");
-				fprintf(fDest16, "{");
-				fprintf(fDest8, "{");
+				fprintf(fDest, "{");
 			}
 
-			//32Bit Easy... done
-			fprintf(fDest32, "0x%02x, ", alpha);
-			fprintf(fDest32, "0x%02x, ", pixel.rgbtRed);
-			fprintf(fDest32, "0x%02x, ", pixel.rgbtGreen);
-			fprintf(fDest32, "0x%02x, ", pixel.rgbtBlue);
+			if(bpp == bit32)
+			{
+				//32Bit Easy... done
+				fprintf(fDest, "0x%02x, ", alpha);
+				fprintf(fDest, "0x%02x, ", pixel.rgbtRed);
+				fprintf(fDest, "0x%02x, ", pixel.rgbtGreen);
+				fprintf(fDest, "0x%02x, ", pixel.rgbtBlue);
+			}
+			else if(bpp == bit24)
+			{
+				//24Bit
+				fprintf(fDest, "0x%02x, ", pixel.rgbtRed);
+				fprintf(fDest, "0x%02x, ", pixel.rgbtGreen);
+				fprintf(fDest, "0x%02x, ", pixel.rgbtBlue);
+			}
+			else if(bpp == bit18)
+			{
+				//18Bit
+				downConvert18(&pixel, &newPixel);
+				fprintf(fDest, "0x%02x, ", newPixel.rgbtRed);
+				fprintf(fDest, "0x%02x, ", newPixel.rgbtGreen);
+				fprintf(fDest, "0x%02x, ", newPixel.rgbtBlue);
+			}
+			else if(bpp == bit16)
+			{
+				//16Bit
+				downConvert16(&pixel, &msb, &lsb);
+				fprintf(fDest, "0x%02x, ", msb);
+				fprintf(fDest, "0x%02x, ", lsb);
+			}
+			else if(bpp == bit8)
+			{
+				//8 bit
+				downConvert8(&pixel, &newValue);
+				fprintf(fDest, "0x%02x, ", newValue);
+			}
 
-			//24Bit
-			fprintf(fDest24, "0x%02x, ", pixel.rgbtRed);
-			fprintf(fDest24, "0x%02x, ", pixel.rgbtGreen);
-			fprintf(fDest24, "0x%02x, ", pixel.rgbtBlue);
-
-			//18Bit
-			downConvert18(&pixel, &newPixel);
-			fprintf(fDest18, "0x%02x, ", newPixel.rgbtRed);
-			fprintf(fDest18, "0x%02x, ", newPixel.rgbtGreen);
-			fprintf(fDest18, "0x%02x, ", newPixel.rgbtBlue);
-
-			//16Bit
-			downConvert16(&pixel, &msb, &lsb);
-			fprintf(fDest16, "0x%02x, ", msb);
-			fprintf(fDest16, "0x%02x, ", lsb);
-
-			//8 bit
-			downConvert8(&pixel, &newValue);
-			fprintf(fDest8, "0x%02x, ", newValue);
- 
 			if(++Line==0 || Line%bih.biWidth == 0)
 			{
 				if(dimensions == 2)
 				{
-					fprintf(fDest32, "},\n");
-					fprintf(fDest24, "},\n");
-					fprintf(fDest18, "},\n");
-					fprintf(fDest16, "},\n");
-					fprintf(fDest8, "},\n");
+					fprintf(fDest, "},\n");
 					if(x == bih.biHeight)
 					{
-						fprintf(fDest32, "{");
-						fprintf(fDest24, "{");
-						fprintf(fDest18, "{");
-						fprintf(fDest16, "{");
-						fprintf(fDest8, "{");
+						fprintf(fDest, "{");
 					}
 				}
 				else
 				{
-					fprintf(fDest32, "\n");
-					fprintf(fDest24, "\n");
-					fprintf(fDest18, "\n");
-					fprintf(fDest16, "\n");
-					fprintf(fDest8, "\n");
+					fprintf(fDest, "\n");
 				}
-
 			}
- 
 		} 
 	}
+
 	//Print the closing string that makes this a variable
-	if(dimensions == 2)
-	{
-		//fprintf(fDest, "}");
-	}
+	fprintf(fDest, "};\n");
 
-	fprintf(fDest32, "};\n");
-	fprintf(fDest24, "};\n");
-	fprintf(fDest18, "};\n");
-	fprintf(fDest16, "};\n");
-	fprintf(fDest8, "};\n");
-
-	fclose(fDest32);
-	fclose(fDest24);
-	fclose(fDest18);
-	fclose(fDest16);
-	fclose(fDest8);
+	//All finished
+	fclose(fDest);
 	return 0;
 }
 void _bmpImage::downConvert8(const RGBTRIPLE *pixel, BYTE *newValue)

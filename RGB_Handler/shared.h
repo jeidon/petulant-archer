@@ -5,7 +5,7 @@
 #include <iostream>
 #include "Shlwapi.h"
 
-enum{bit8, bit16, bit24, bit32};
+enum{bit8 = 8, bit16 = 16, bit18 = 18, bit24 = 24, bit32 = 32};
 
 BYTE linearConvert(const BYTE x, float A, float B, float C, float D);
 
