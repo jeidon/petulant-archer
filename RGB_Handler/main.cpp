@@ -10,22 +10,30 @@ int main(int argc, char *argv[])
 	//Where is the app running from?
 	APPPATH = argv[0];
 
-	//Where is the source file?
-	image.setSourceFile(argv[1]);
+	if (argc == 1)
+	{
+		printf("This utility requires a source file in order to perform a conversion\n");
+		system("pause");
+	}
+	else
+	{
 
-	//Open and fill the buffer with the image
-	image.openSourceFile();
+		//Where is the source file?
+		image.setSourceFile(argv[1]);
 
-	//Create header files in each of the possible sizes
-	image.createHeaderFile(bit8, 1);
-	image.createHeaderFile(bit8, 2);
-	image.createHeaderFile(bit16, 1);
-	image.createHeaderFile(bit16, 2);
-	image.createHeaderFile(bit18, 1);
-	image.createHeaderFile(bit24, 2);
-	image.createHeaderFile(bit32, 1);
-	image.createHeaderFile(bit18, 2);
-	image.createHeaderFile(bit24, 1);
-	image.createHeaderFile(bit32, 2);
+		//Open and fill the buffer with the image
+		image.openSourceFile();
 
+		//Create header files in each of the possible formats
+		image.createHeaderFile(bit8, 1);
+		image.createHeaderFile(bit8, 2);
+		image.createHeaderFile(bit16, 1);
+		image.createHeaderFile(bit16, 2);
+		image.createHeaderFile(bit18, 1);
+		image.createHeaderFile(bit24, 2);
+		image.createHeaderFile(bit32, 1);
+		image.createHeaderFile(bit18, 2);
+		image.createHeaderFile(bit24, 1);
+		image.createHeaderFile(bit32, 2);
+	}
 }

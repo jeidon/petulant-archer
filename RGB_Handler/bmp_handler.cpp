@@ -182,7 +182,7 @@ void _bmpImage::downConvert18(const RGBTRIPLE *pixel, RGBTRIPLE *newPixel)
 RGBTRIPLE _bmpImage::getPixel(int x,int y)
 {
 	// Image define from earlier
-	return image[(bih.biHeight-1-y)*bih.biWidth+x];
+	return image[(bih.biHeight-1-x)*bih.biWidth+y];
 }
 void _bmpImage::initBlank(int x, int y)
 {
