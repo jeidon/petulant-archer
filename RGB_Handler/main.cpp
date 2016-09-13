@@ -15,6 +15,10 @@ int main(int argc, char *argv[])
 		printf("This utility requires a source file in order to perform a conversion\n");
 		system("pause");
 	}
+	else if (!PathFileExists(argv[1]))
+	{
+		printf("The specified source file does not exist");
+	}
 	else
 	{
 
